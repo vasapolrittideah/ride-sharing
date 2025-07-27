@@ -30,7 +30,7 @@ message Geometry {
 }
 
 message Route {
-    repeated Geometry grometry = 1;
+    repeated Geometry geometry = 1;
     double distance = 2;
     double duration = 3;
 }

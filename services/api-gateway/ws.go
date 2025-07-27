@@ -67,7 +67,7 @@ func handleDriversWebSocket(w http.ResponseWriter, r *http.Request) {
 		Name           string `json:"name"`
 		ProfilePicture string `json:"profilePicture"`
 		CarPlate       string `json:"carPlate"`
-		packageSlug    string `json:"packageSlug"`
+		PackageSlug    string `json:"packageSlug"`
 	}
 
 	wsMessage := contracts.WSMessage{
@@ -77,7 +77,7 @@ func handleDriversWebSocket(w http.ResponseWriter, r *http.Request) {
 			Name:           "John Doe",
 			ProfilePicture: util.GetRandomAvatar(1),
 			CarPlate:       "ABC123",
-			packageSlug:    packageSlug,
+			PackageSlug:    packageSlug,
 		},
 	}
 

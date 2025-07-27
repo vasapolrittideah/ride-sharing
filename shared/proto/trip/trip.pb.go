@@ -239,7 +239,7 @@ func (x *Geometry) GetCoordinates() []*Coordinate {
 
 type Route struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Grometry      []*Geometry            `protobuf:"bytes,1,rep,name=grometry,proto3" json:"grometry,omitempty"`
+	Geometry      []*Geometry            `protobuf:"bytes,1,rep,name=geometry,proto3" json:"geometry,omitempty"`
 	Distance      float64                `protobuf:"fixed64,2,opt,name=distance,proto3" json:"distance,omitempty"`
 	Duration      float64                `protobuf:"fixed64,3,opt,name=duration,proto3" json:"duration,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -276,9 +276,9 @@ func (*Route) Descriptor() ([]byte, []int) {
 	return file_trip_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *Route) GetGrometry() []*Geometry {
+func (x *Route) GetGeometry() []*Geometry {
 	if x != nil {
-		return x.Grometry
+		return x.Geometry
 	}
 	return nil
 }
@@ -386,7 +386,7 @@ const file_trip_proto_rawDesc = "" +
 	"\bGeometry\x122\n" +
 	"\vcoordinates\x18\x01 \x03(\v2\x10.trip.CoordinateR\vcoordinates\"k\n" +
 	"\x05Route\x12*\n" +
-	"\bgrometry\x18\x01 \x03(\v2\x0e.trip.GeometryR\bgrometry\x12\x1a\n" +
+	"\bgeometry\x18\x01 \x03(\v2\x0e.trip.GeometryR\bgeometry\x12\x1a\n" +
 	"\bdistance\x18\x02 \x01(\x01R\bdistance\x12\x1a\n" +
 	"\bduration\x18\x03 \x01(\x01R\bduration\"\x82\x01\n" +
 	"\bRideFare\x12\x0e\n" +
@@ -424,7 +424,7 @@ var file_trip_proto_depIdxs = []int32{
 	4, // 2: trip.PreviewTripResponse.route:type_name -> trip.Route
 	5, // 3: trip.PreviewTripResponse.rideFares:type_name -> trip.RideFare
 	2, // 4: trip.Geometry.coordinates:type_name -> trip.Coordinate
-	3, // 5: trip.Route.grometry:type_name -> trip.Geometry
+	3, // 5: trip.Route.geometry:type_name -> trip.Geometry
 	0, // 6: trip.TripService.PreviewTrip:input_type -> trip.PreviewTripRequest
 	1, // 7: trip.TripService.PreviewTrip:output_type -> trip.PreviewTripResponse
 	7, // [7:8] is the sub-list for method output_type
