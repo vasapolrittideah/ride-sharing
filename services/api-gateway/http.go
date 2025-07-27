@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	grpcclient "ride-sharing/services/api-gateway/grpc_client"
 	"ride-sharing/shared/contracts"
 )
 
@@ -22,6 +23,13 @@ func handleTripPreview(w http.ResponseWriter, r *http.Request) {
 
 	jsonBody, _ := json.Marshal(reqBody)
 	reader := bytes.NewReader(jsonBody)
+
+	tripService, err := grpcclient.NewTripServiceClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer tripService.Close()
 
 	// TODO: Call trip service
 	res, err := http.Post("http://trip-service:8083/preview", "application/json", reader)
