@@ -61,3 +61,73 @@ func (s *service) GetRoute(ctx context.Context, pickup, destination *types.Coord
 
 	return &routeRes, nil
 }
+
+func (s *service) GenerateTripFares(ctx context.Context, rideFares []*domain.RideFareModel, userID string) ([]*domain.RideFareModel, error) {
+	fares := make([]*domain.RideFareModel, len(rideFares))
+	for i, fare := range rideFares {
+		id := primitive.NewObjectID()
+		fare := &domain.RideFareModel{
+			ID:                id,
+			UserID:            userID,
+			TotalPriceInCents: fare.TotalPriceInCents,
+			PackageSlug:       fare.PackageSlug,
+		}
+
+		if err := s.repo.SaveRideFare(ctx, fare); err != nil {
+			return nil, fmt.Errorf("failed to save trip fare %w", err)
+		}
+
+		fares[i] = fare
+	}
+
+	return fares, nil
+}
+
+func (s *service) EstimatePackagesPriceWithRoute(route *tripTypes.OsrmApiResponse) []*domain.RideFareModel {
+	baseFares := getBaseFares()
+	estimatedFares := make([]*domain.RideFareModel, len(baseFares))
+
+	for i, fare := range baseFares {
+		estimatedFares[i] = estimateFareRoute(fare, route)
+	}
+
+	return estimatedFares
+}
+
+func estimateFareRoute(fare *domain.RideFareModel, route *tripTypes.OsrmApiResponse) *domain.RideFareModel {
+	pricingConfig := tripTypes.DefaultPricingConfig()
+	carPackagePrice := fare.TotalPriceInCents
+
+	distanceKm := route.Routes[0].Distance
+	durationInMinutes := route.Routes[0].Duration
+
+	distanceFare := distanceKm * pricingConfig.PricePerUnitOfDistance
+	timeFare := durationInMinutes * pricingConfig.PricePerMinute
+	totalPrice := carPackagePrice + distanceFare + timeFare
+
+	return &domain.RideFareModel{
+		TotalPriceInCents: totalPrice,
+		PackageSlug:       fare.PackageSlug,
+	}
+}
+
+func getBaseFares() []*domain.RideFareModel {
+	return []*domain.RideFareModel{
+		{
+			PackageSlug:       "suv",
+			TotalPriceInCents: 200,
+		},
+		{
+			PackageSlug:       "sedan",
+			TotalPriceInCents: 350,
+		},
+		{
+			PackageSlug:       "van",
+			TotalPriceInCents: 400,
+		},
+		{
+			PackageSlug:       "luxury",
+			TotalPriceInCents: 1000,
+		},
+	}
+}
