@@ -5,6 +5,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"ride-sharing/shared/env"
+	"ride-sharing/shared/messaging"
 	"syscall"
 
 	"golang.org/x/net/context"
@@ -16,6 +18,7 @@ var (
 )
 
 func main() {
+	rabbitmqURI := env.GetString("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672/")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -30,6 +33,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	rabbitmq, err := messaging.NewRebbitmq(rabbitmqURI)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rabbitmq.Close()
 
 	service := NewService()
 
