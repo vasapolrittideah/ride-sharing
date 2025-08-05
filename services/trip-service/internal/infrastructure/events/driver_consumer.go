@@ -48,7 +48,10 @@ func (c *driverConsumer) Listen() error {
 				return err
 			}
 		case contracts.DriverCmdTripDecline:
-			log.Println("Declined trip")
+			if err := c.handleTripDeclined(ctx, payload.TripID, payload.RiderID); err != nil {
+				log.Printf("Failed to handle trip declined: %v", err)
+				return err
+			}
 			return nil
 		}
 
@@ -87,6 +90,32 @@ func (c *driverConsumer) handleTripAccepted(ctx context.Context, tripID string, 
 	if err := c.rabbitmq.PublishMessage(ctx, contracts.TripEventDriverAssigned, contracts.AmqpMessage{
 		OwnerID: trip.UserID,
 		Data:    marshalledTrip,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *driverConsumer) handleTripDeclined(ctx context.Context, tripID string, riderID string) error {
+	// When a driver declienes, we should try to find another driver
+	trip, err := c.service.GetTripByID(ctx, tripID)
+	if err != nil {
+		return err
+	}
+
+	newPayload := messaging.TripEventData{
+		Trip: trip.ToProto(),
+	}
+
+	marshalledPayload, err := json.Marshal(newPayload)
+	if err != nil {
+		return err
+	}
+
+	if err := c.rabbitmq.PublishMessage(ctx, contracts.TripEventDriverNotInterested, contracts.AmqpMessage{
+		OwnerID: riderID,
+		Data:    marshalledPayload,
 	}); err != nil {
 		return err
 	}
