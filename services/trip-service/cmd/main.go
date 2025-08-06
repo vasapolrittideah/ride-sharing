@@ -57,6 +57,13 @@ func main() {
 		}
 	}()
 
+	paymentConsumer := events.NewPaymentConsumer(rabbitmq, svc)
+	go func() {
+		if err := paymentConsumer.Listen(); err != nil {
+			log.Fatalf("failed to listen to the message: %v", err)
+		}
+	}()
+
 	// starting the grpc server
 	grpcServer := grpcserver.NewServer()
 	grpc.NewGRPCHandler(grpcServer, svc, publisher)
