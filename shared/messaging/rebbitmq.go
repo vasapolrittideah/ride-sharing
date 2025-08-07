@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	TripExchange = "trip"
+	TripExchange       = "trip"
+	DeadLetterExchange = "dlx"
 )
 
 type Rabbitmq struct {
@@ -146,7 +147,52 @@ func (r *Rabbitmq) publish(ctx context.Context, exchange, routingKey string, msg
 	)
 }
 
+func (r *Rabbitmq) setupDeadLetterExchange() error {
+	err := r.Channel.ExchangeDeclare(
+		DeadLetterExchange, // name
+		"topic",            // type
+		true,               // durable
+		false,              // auto-deleted
+		false,              // internal
+		false,              // no-wait
+		nil,                // arguments
+	)
+	if err != nil {
+		return fmt.Errorf("failed to declare exchange: %s: %v", TripExchange, err)
+	}
+
+	q, err := r.Channel.QueueDeclare(
+		DeadLetterQueue, // name
+		true,            // durable
+		false,           // delete when unused
+		false,           // exclusive
+		false,           // no-wait
+		nil,             // arguments
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = r.Channel.QueueBind(
+		q.Name,
+		"#", // wildcard routing key to catch all messages
+		DeadLetterExchange,
+		false,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to bind dead letter queue: %v", err)
+	}
+
+	return nil
+}
+
 func (r *Rabbitmq) setupExchangesAndQueues() error {
+	// First set up the DLQ exchange and queue
+	if err := r.setupDeadLetterExchange(); err != nil {
+		return err
+	}
+
 	err := r.Channel.ExchangeDeclare(
 		TripExchange, // name
 		"topic",      // type
@@ -246,13 +292,18 @@ func (r *Rabbitmq) setupExchangesAndQueues() error {
 }
 
 func (r *Rabbitmq) declareAndBindQueue(queueName string, messageTypes []string, exchange string) error {
+	// Add dead letter configuration
+	args := amqp.Table{
+		"x-dead-letter-exchange": DeadLetterExchange,
+	}
+
 	q, err := r.Channel.QueueDeclare(
 		queueName, // name
 		true,      // durable
 		false,     // delete when unused
 		false,     // exclusive
 		false,     // no-wait
-		nil,       // arguments
+		args,      // arguments with DLX config
 	)
 	if err != nil {
 		log.Fatal(err)
