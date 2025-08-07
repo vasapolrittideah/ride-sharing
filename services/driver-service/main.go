@@ -57,7 +57,7 @@ func main() {
 	service := NewService()
 
 	// starting the grpc server
-	grpcServer := grpcserver.NewServer()
+	grpcServer := grpcserver.NewServer(tracing.WithTracingInterceptors()...)
 	NewGrpcHandler(grpcServer, service)
 
 	consumer := NewTripConsumer(rabbitmq, service)
